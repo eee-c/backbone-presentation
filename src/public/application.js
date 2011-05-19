@@ -72,6 +72,22 @@ var TweetList = new (Backbone.View.extend({
   }
 }))();
 
+
+new (Backbone.Controller.extend({
+  routes: {
+    "!/filter/:text": "filter"
+  },
+
+  filter: function(filter_string) {
+    TweetFilter = function(tweet) {
+      return (tweet.escape('text').indexOf(filter_string) >= 0);
+    };
+    // When the filter changes, fire an event
+    //this.trigger('change:filter');
+    TweetList.render();
+  }
+}));
+
 // View to handle find-as-you-type filtering
 var FilterView = new (Backbone.View.extend({
   // bind to existing element
@@ -88,7 +104,7 @@ var FilterView = new (Backbone.View.extend({
     $(this.el).html(
       "<div class='span-4'>Filter tweets by query</div>"+
       "<div class='span-20 last'>"+
-        "<input type='text' />" +
+      "<input type='text' value='" + window.location.hash.replace(/.+\//, '') + "' />" +
       "</div>"
     );
     // And bind our events (this backbone method auto-clears events)
@@ -98,11 +114,8 @@ var FilterView = new (Backbone.View.extend({
     // Set the global filter to return true for tweets
     // containing text that has the value of the filter field
     // in it somewhere
-    TweetFilter = function(tweet) {
-      return (tweet.escape('text').indexOf(this.$('input').val()) >= 0);
-    };
-    // When the filter changes, fire an event
-    this.trigger('change:filter');
+
+    window.location = '#!/filter/' + this.$('input').val();
   }
 }))();
 
@@ -114,11 +127,13 @@ var Feed = new Tweets();
 // When the feed is refreshed, render the list
 Feed.bind('refresh', TweetList.render);
 // When the filter changes, render the list
-FilterView.bind('change:filter', TweetList.render);
+//FilterView.bind('change:filter', TweetList.render);
 
 // Auto-refresh the feed every 10 seconds
 var Refresh = function() {
-  setTimeout(Refresh, 10000);
+  setTimeout(Refresh, 100*1000);
   Feed.fetch();
 };
 Refresh();
+
+Backbone.history.start();
